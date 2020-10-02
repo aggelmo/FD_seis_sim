@@ -41,6 +41,21 @@ Dhz=single(zeros(size(Vp(1,1,:))));
 Dhz(1:end-1)=abs(Z(1,1,2:end)-Z(1,1,1:end-1));
 Dhz(end)=Dhz(end-1);
 
+%% Find indices of surface nodes.
+[ny,nx,nz]=size(Vp);    
+if topoload==1
+    kk=1;
+    topo_index=single(ones(nx*ny,1));
+    for i=1:ny
+        for j=1:nx
+            [~,n1]=min(abs(Z(i,j,:)-topo(i,j)));
+            topo_index(kk)=sub2ind(size(Vp),i,j,n1);
+            kk=kk+1;
+        end
+    end
+end
+
+
 %% Prepare topography mask
 if topoload==1   
     % Add nodes over the model if maximum topographic altitude is higher than maximum model altitude
@@ -77,20 +92,20 @@ if topoload==1
     disp('Gridding the topography into the velocity nodes')
     % Grid the topography into the normal stress nodes of the 3D model 
     
-    w3=griddata(double(X_topo),double(Y_topo),double(topo),double(X(:,:,1)),...
-        double(Y(:,:,1)),'linear');
+    w3=Z(topo_index);
+    w3=reshape(w3,nx,ny);w3=w3';
     
     if max(isnan(w3(:)))==1
         msgbox('topography grid contains nan values after interpolation',...
             'set larger area for the topography in order to cover all nodes of the input model','input');
         return
     end
-    w3=round(w3/Dhz(1))*Dhz(1);          % round towards dhz values
+    
     % Now remove values from velocity model that fall over the topography.
     
     g_mask=single(zeros(size(Vp)));
     for i=1:length(Z(1,1,:))
-        temp1=w3-(Z(:,:,i)+single(Dhz(1)/2)); 	% Create grid mask
+        temp1=w3-(Z(:,:,i)-single(Dhz(i)/2)); 	% Create grid mask
         temp1(temp1<0)=0;                       % (free surface coincides with cell surface
         temp1(temp1>0)=1;                       % but normal stresses are always below)                    
         g_mask(:,:,i)=temp1;
@@ -98,8 +113,9 @@ if topoload==1
     
     % Find indices of normal stress nodes that lie over the topographic
     % surface
+%     g_mask_tzzi=single(topo_index);
     g_mask_tzzi=single(find(g_mask==0));
-    
+
     % Following part is to determine which nodes lie on vertical and horizontal surfaces of the 
     % free surface for Ohminato & Chouet surface BC
     % Interpolate grid on txy stress nodes   
@@ -145,7 +161,7 @@ disp('Adjusting fault plane to calculation grid');
 X=single(X);Y=single(Y);Z=single(Z);
 % Adjust fault surface to calculation grid
 [faultpoints, ttime, nfact]=fin_fault(posx,posy,posz,X,Y,Z,fault(1),fault(2),source(1),-source(2),xrup,zrup,fault(3),Dt,min(abs(Dhx(:))));
-  
+
 % Obtain fault nodes indices for all velocity and stress nodes
 [faultpoints_x0_y0_z0,faultpoints_x1_y0_z0, faultpoints_x1_y1_z0, ...
 faultpoints_x1_y11_z0,faultpoints_x0_y1_z0,faultpoints_x0_y11_z0,...
@@ -172,24 +188,9 @@ a=(a./max(a));
 [Gtxx,Gtxy,Gtxz,Gtyy,Gtyz,Gtzz]=sdr2mt(source(1)-90,source(2),source(3),source(4));
 
 disp('Finished preparing finite source');
-disp(['Total number of sub-sources: ' num2str(round(nfact))])
+disp(['Total number of sub-sources: ' num2str(round(1./nfact))])
 clear pulse
 
-%% Find indices of surface nodes. Will be used only if output of surface values is requested
-[ny,nx,nz]=size(Vp);    
-if savemode==2   
-    if topoload==1
-        kk=1;
-        topo_index=single(ones(nx*ny,1));
-        for i=1:ny
-            for j=1:nx
-                [~,n1]=min(abs(Z(i,j,:)-topo(i,j)));
-                topo_index(kk)=sub2ind(size(Vp),i,j,n1);
-                kk=kk+1;
-            end
-        end
-    end
-end
 
 %% Matrix preallocation
 % If GPU mode is selected, check if harware supports CUDA for GPU processing
