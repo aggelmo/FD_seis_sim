@@ -1,8 +1,6 @@
 function w3=FD_sim_fault_2_Q2(Vp,Vs,rho,X,Y,Z,source,pulse,TP,TS,tsl,Dt,maxt,posx,posy,posz,fault,xrup,zrup,gpumode,N,b,topoload,topo,X_topo,Y_topo,savemode,savetype,skipt,outpath)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%INPUT DATA%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%INPUT DATA%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Vp: 3D P-velocity grid
 % Vp: 3D S-velocity grid
 % rho: 3D Pdensity grid
